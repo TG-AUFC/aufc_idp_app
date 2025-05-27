@@ -10,7 +10,14 @@ usernames = users_df['username'].tolist()
 names = users_df['name'].tolist()
 passwords = users_df['password'].astype(str).fillna("").tolist()
 
-hashed_passwords = stauth.Hasher(passwords).generate()
+# Sanitize password column
+passwords = users_df["password"].fillna("").astype(str).tolist()
+
+try:
+    hashed_passwords = stauth.Hasher(passwords).generate()
+except Exception as e:
+    st.error("Error processing passwords. Check that all passwords are valid strings.")
+    st.stop()
 
 credentials = {
     "usernames": {
