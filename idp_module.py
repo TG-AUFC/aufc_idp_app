@@ -1,41 +1,49 @@
+
 import streamlit as st
-import pandas as pd
-from gsheet import connect_sheet
-from datetime import date
+from gsheet import get_players, get_idp, add_idp_entry
+from datetime import datetime
 
-def render():
-    sheet = connect_sheet("AUFC_Streamlit")
-    players_df = pd.DataFrame(sheet.worksheet("Players").get_all_records())
-    idp_df = pd.DataFrame(sheet.worksheet("IDP").get_all_records())
+def run_idp_module(username):
+    players_df = get_players()
+    idp_df = get_idp()
 
-    st.title("📋 Individual Development Plans")
+    player_list = players_df["Player Name"].dropna().unique().tolist()
+    selected_player = st.selectbox("Select a player", player_list)
 
-    player_names = players_df["Full Name"].tolist()
-    selected_player = st.selectbox("Seleccioná un jugador", player_names)
+    player_data = players_df[players_df["Player Name"] == selected_player].iloc[0]
+    st.subheader("Player Info")
+    st.write(player_data.to_frame())
 
-    st.subheader("🔍 Ficha del Jugador")
-    st.write(players_df[players_df["Full Name"] == selected_player])
+    st.markdown("---")
+    st.subheader("Add New Development Plan")
 
-    st.subheader("📊 Planes anteriores")
-    st.dataframe(idp_df[idp_df["Player Name"] == selected_player])
+    with st.form("idp_form"):
+        today = datetime.today().strftime("%Y-%m-%d")
+        date = st.date_input("Date", value=datetime.today())
+        dev_area = st.selectbox("Development Area", ["Tactical", "Technical", "Physical", "Mental", "Other"])
+        component = st.text_input("Component")
+        intervention = st.text_input("Intervention")
+        responsibility = st.text_input("Responsibility", value=username)
+        time_frame = st.text_input("Time Frame")
+        success_measures = st.text_input("Success Measures")
+        goals = st.text_area("Goals")
+        reality = st.text_area("Reality")
+        opportunity = st.text_area("Opportunity")
+        submit = st.form_submit_button("Save Plan")
 
-    st.subheader("➕ Nuevo Plan")
-    with st.form("new_idp"):
-        dev_area = st.text_input("Área de desarrollo")
-        component = st.text_input("Componente")
-        intervention = st.text_input("Intervención")
-        responsibility = st.text_input("Responsabilidad")
-        timeframe = st.text_input("Duración")
-        success = st.text_input("Medidas de éxito")
-        goals = st.text_input("Meta")
-        reality = st.text_input("Realidad")
-        opportunity = st.text_input("Oportunidad")
-        fecha = st.date_input("Fecha", value=date.today())
-
-        submitted = st.form_submit_button("Guardar")
-
-        if submitted:
-            new_row = [selected_player, str(fecha), dev_area, component, intervention,
-                       responsibility, timeframe, success, goals, reality, opportunity]
-            sheet.worksheet("IDP").append_row(new_row)
-            st.success("✅ Plan guardado correctamente.")
+        if submit:
+            new_row = [
+                selected_player,
+                date.strftime("%Y-%m-%d"),
+                dev_area,
+                component,
+                intervention,
+                responsibility,
+                time_frame,
+                success_measures,
+                goals,
+                reality,
+                opportunity,
+            ]
+            add_idp_entry(new_row)
+            st.success("Development plan saved successfully.")

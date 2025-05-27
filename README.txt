@@ -1,8 +1,19 @@
-PASOS PARA USAR LA APP:
+# AUFC IDP Streamlit App
 
-1. Crear archivo 'credentials.json' con tu Service Account y colocarlo en esta carpeta.
-2. Subir esta carpeta como repo a GitHub.
-3. Entrar a https://streamlit.io/cloud y conectar tu cuenta de GitHub.
-4. Seleccionar el repo y archivo app.py.
-5. En la sección 'Secrets' de la configuración de la app en Streamlit Cloud, copiar el contenido del credentials.json.
-6. ¡Listo! Ya podés usar tu app con login seguro y conexión a Google Sheets.
+This app allows coaches to:
+- Log in securely (using usernames from the Google Sheet)
+- View player information
+- Submit and track Individual Development Plans (IDPs)
+
+## 🔗 Connected to
+- Google Sheet: `AUFC_Streamlit`
+  - Tabs: `users`, `Players`, `IDP`
+
+## 🛠 Setup (Streamlit Cloud)
+1. Upload all `.py` files to a private GitHub repo
+2. Go to https://streamlit.io/cloud and deploy the app
+3. Add `GOOGLE_CREDS` as a secret in Settings > Secrets (paste your credentials.json content)
+4. Share the Google Sheet with your service account (as editor)
+
+## 📄 Dependencies
+See `requirements.txt`

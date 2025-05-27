@@ -6,16 +6,16 @@ from idp_module import run_idp_module
 
 st.set_page_config(page_title="AUFC IDP Tracker", layout="wide")
 
-# Obtener usuarios desde Google Sheet
+# Cargar usuarios desde Google Sheets
 users_df = get_users()
 
-# Crear credenciales directamente sin hasheo
+# Crear diccionario de credenciales sin hashing (modo testing)
 credentials = {
     "usernames": {
         row["username"]: {
             "name": row["name"],
             "password": str(row["password"]),
-            "role": row["role"],
+            "role": row["role"]
         }
         for _, row in users_df.iterrows()
     }
@@ -33,14 +33,13 @@ name, authentication_status, username = authenticator.login("Login", "main")
 if authentication_status is False:
     st.error("Username/password is incorrect")
 
-if authentication_status is None:
+elif authentication_status is None:
     st.warning("Please enter your username and password")
 
-if authentication_status:
+elif authentication_status:
     authenticator.logout("Logout", "sidebar")
-    st.sidebar.write(f"Welcome {name}!")
+    st.sidebar.success(f"Welcome {name}!")
 
     st.title("📋 Individual Development Plans")
 
-    # Módulo principal de IDPs
     run_idp_module(username)
