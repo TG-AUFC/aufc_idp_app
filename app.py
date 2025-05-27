@@ -8,7 +8,7 @@ from idp_module import render
 users_df = get_users()
 usernames = users_df['username'].tolist()
 names = users_df['name'].tolist()
-passwords = users_df['password'].tolist()
+passwords = users_df['password'].astype(str).fillna("").tolist()
 
 hashed_passwords = stauth.Hasher(passwords).generate()
 
