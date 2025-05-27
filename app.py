@@ -1,15 +1,15 @@
-
 import streamlit as st
 import streamlit_authenticator as stauth
 from gsheet import get_users
 from idp_module import run_idp_module
 
+# Configuración de la página
 st.set_page_config(page_title="AUFC IDP Tracker", layout="wide")
 
-# Cargar usuarios desde Google Sheets
+# Cargar usuarios desde la hoja de cálculo
 users_df = get_users()
 
-# Crear diccionario de credenciales sin hashing (modo testing)
+# Preparar diccionario de credenciales (sin hashing)
 credentials = {
     "usernames": {
         row["username"]: {
@@ -21,26 +21,29 @@ credentials = {
     }
 }
 
+# Inicializar autenticador
 authenticator = stauth.Authenticate(
-    credentials,
-    "idp_app",
-    "abcdef",
+    credentials=credentials,
+    cookie_name="idp_app",
+    key="abcdef",
     cookie_expiry_days=1
 )
 
-# ✅ Corregido: usar keyword argument para location
-name, authentication_status, username = authenticator.login("Login", location="main")
+# Mostrar formulario de login
+authenticator.login()
 
-if authentication_status is False:
+# Verificación de estado de sesión
+if st.session_state["authentication_status"] is False:
     st.error("Username/password is incorrect")
 
-elif authentication_status is None:
+elif st.session_state["authentication_status"] is None:
     st.warning("Please enter your username and password")
 
-elif authentication_status:
+elif st.session_state["authentication_status"]:
     authenticator.logout("Logout", "sidebar")
-    st.sidebar.success(f"Welcome {name}!")
+    st.sidebar.success(f"Welcome {st.session_state['name']}!")
 
     st.title("📋 Individual Development Plans")
 
-    run_idp_module(username)
+    # Ejecutar el módulo principal
+    run_idp_module(st.session_state["username"])
