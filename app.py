@@ -1,43 +1,46 @@
+
 import streamlit as st
 import streamlit_authenticator as stauth
-import pandas as pd
 from gsheet import get_users
-from idp_module import render
+from idp_module import run_idp_module
 
-# Cargar usuarios desde Google Sheet
+st.set_page_config(page_title="AUFC IDP Tracker", layout="wide")
+
+# Obtener usuarios desde Google Sheet
 users_df = get_users()
-usernames = users_df['username'].tolist()
-names = users_df['name'].tolist()
-passwords = users_df['password'].astype(str).fillna("").tolist()
 
-# Sanitize password column
-passwords = users_df["password"].fillna("").astype(str).tolist()
-
-try:
-    hashed_passwords = stauth.Hasher(passwords).generate()
-except Exception as e:
-    st.error("Error processing passwords. Check that all passwords are valid strings.")
-    st.stop()
-
+# Crear credenciales directamente sin hasheo
 credentials = {
     "usernames": {
-        usernames[i]: {
-            "name": names[i],
-            "password": hashed_passwords[i]
-        } for i in range(len(usernames))
+        row["username"]: {
+            "name": row["name"],
+            "password": str(row["password"]),
+            "role": row["role"],
+        }
+        for _, row in users_df.iterrows()
     }
 }
 
 authenticator = stauth.Authenticate(
-    credentials, "idp_app", "abcdef", cookie_expiry_days=30
+    credentials,
+    "idp_app",
+    "abcdef",
+    cookie_expiry_days=1
 )
 
-name, auth_status, username = authenticator.login("Login", "main")
+name, authentication_status, username = authenticator.login("Login", "main")
 
-if auth_status:
-    st.sidebar.success(f"Bienvenido {name}")
-    render()
-elif auth_status is False:
-    st.error("Usuario o contraseña incorrectos")
-elif auth_status is None:
-    st.warning("Por favor ingresá tus credenciales")
+if authentication_status is False:
+    st.error("Username/password is incorrect")
+
+if authentication_status is None:
+    st.warning("Please enter your username and password")
+
+if authentication_status:
+    authenticator.logout("Logout", "sidebar")
+    st.sidebar.write(f"Welcome {name}!")
+
+    st.title("📋 Individual Development Plans")
+
+    # Módulo principal de IDPs
+    run_idp_module(username)
